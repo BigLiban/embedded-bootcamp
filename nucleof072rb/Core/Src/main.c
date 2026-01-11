@@ -19,6 +19,8 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "spi.h"
+#include "tim.h"
 #include "usart.h"
 #include "gpio.h"
 
@@ -44,6 +46,9 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
+SPI_HandleTypeDef hspi;
+
+const char TRANSMISSION_DATA[3] = 0x018000; // 00000001 10000000 (SGL/DIFF = 1, CH0 config) 00000000
 
 /* USER CODE END PV */
 
@@ -64,6 +69,7 @@ void SystemClock_Config(void);
   */
 int main(void)
 {
+
   /* USER CODE BEGIN 1 */
 
   /* USER CODE END 1 */
@@ -87,7 +93,15 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_USART2_UART_Init();
+  MX_SPI1_Init();
+  MX_TIM1_Init();
   /* USER CODE BEGIN 2 */
+  HAL_SPI_MspInit(&hspi); // do I need this???
+  // CS pin will always be high by default
+  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_8, GPIO_PIN_SET);
+
+  char send_buf[3]; // send 3 bytes
+  char recv_buf[3]; // receive 3 bytes. First byte will be garbage, 2nd byte, bits 2-0 will contain valid values, and the last byte will contain the remainder of the valid values?
 
   /* USER CODE END 2 */
 
@@ -98,6 +112,18 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+	 // Pull CS line low
+	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_8, GPIO_PIN_RESET);
+	HAL_SPI_TransmitReceive(&hspi, (uint8_t*)&send_buf, (uint8_t*)&recv_buf, 3, 100);
+	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_8, GPIO_PIN_SET);
+
+
+
+
+
+
+
+	HAL_Delay(10);
   }
   /* USER CODE END 3 */
 }
@@ -122,6 +148,7 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
+
   /** Initializes the CPU, AHB and APB buses clocks
   */
   RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
@@ -177,5 +204,3 @@ void assert_failed(uint8_t *file, uint32_t line)
   /* USER CODE END 6 */
 }
 #endif /* USE_FULL_ASSERT */
-
-/************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
