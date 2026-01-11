@@ -46,9 +46,9 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-SPI_HandleTypeDef hspi;
-
-const char TRANSMISSION_DATA[3] = 0x018000; // 00000001 10000000 (SGL/DIFF = 1, CH0 config) 00000000
+const char TRANSMISSION_DATA[3] = {0x01, 0x80, 0x00}; // 00000001 10000000 (SGL/DIFF = 1, CH0 config) 00000000
+const uint16_t maxCounterVal = 2400;
+const uint16_t maxADCVal = 1023;
 
 /* USER CODE END PV */
 
@@ -60,6 +60,20 @@ void SystemClock_Config(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+
+uint16_t adcValToCounts(uint16_t resolution){
+	return (resolution / maxADCVal) * maxCounterVal;
+}
+
+void runMotor(uint16_t resolution) {
+	// convert resolution to # of counts
+	uint16_t counts = adcValToCounts(resolution);
+	// have the timer start
+	HAL_TIM_Base_Start(&htim1);
+	// if it reaches the value we have in the resolution -> motor pin gets set to high
+	__HAL_TIM_SET_COMPARE(&htim1, 0, counts);
+	// timer resets automatically?
+}
 
 /* USER CODE END 0 */
 
@@ -96,11 +110,17 @@ int main(void)
   MX_SPI1_Init();
   MX_TIM1_Init();
   /* USER CODE BEGIN 2 */
-  HAL_SPI_MspInit(&hspi); // do I need this???
+  //HAL_SPI_MspInit(&hspi); // do I need this???
   // CS pin will always be high by default
   HAL_GPIO_WritePin(GPIOB, GPIO_PIN_8, GPIO_PIN_SET);
 
   char send_buf[3]; // send 3 bytes
+
+  // fill up send_buf
+  for(int i = 0; i < sizeof(TRANSMISSION_DATA); ++i){
+	  send_buf[i] = TRANSMISSION_DATA[i];
+  }
+
   char recv_buf[3]; // receive 3 bytes. First byte will be garbage, 2nd byte, bits 2-0 will contain valid values, and the last byte will contain the remainder of the valid values?
 
   /* USER CODE END 2 */
@@ -114,14 +134,12 @@ int main(void)
     /* USER CODE BEGIN 3 */
 	 // Pull CS line low
 	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_8, GPIO_PIN_RESET);
-	HAL_SPI_TransmitReceive(&hspi, (uint8_t*)&send_buf, (uint8_t*)&recv_buf, 3, 100);
+	HAL_SPI_TransmitReceive(&hspi1, (uint8_t*)&send_buf, (uint8_t*)&recv_buf, 3, 100);
 	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_8, GPIO_PIN_SET);
 
+	uint16_t resolution = ( ((uint16_t)recv_buf[2] << 8) & (uint16_t)recv_buf[3]) & 0x0003FF; // 10 bit value of ADC,
 
-
-
-
-
+	runMotor(resolution);
 
 	HAL_Delay(10);
   }
