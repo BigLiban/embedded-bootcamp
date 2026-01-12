@@ -47,6 +47,7 @@
 
 /* USER CODE BEGIN PV */
 const uint16_t maxCounterVal = 2400;
+const uint16_t minOnPeriodCounterVal = 2160; // This is 10% off of 2400, so the on period would be 2160-2400
 const uint16_t maxADCVal = 1023;
 const uint8_t CH0 = 0;
 
@@ -62,7 +63,7 @@ void SystemClock_Config(void);
 /* USER CODE BEGIN 0 */
 
 uint16_t adcValToCounts(uint16_t resolution){
-	return (resolution / maxADCVal) * maxCounterVal;
+	return (resolution / maxADCVal) * (maxCounterVal - minOnPeriodCounterVal) + minOnPeriodCounterVal; // scale value up to a range of 2160-2400 (10% duty cycle)
 }
 
 void runMotor(uint16_t resolution) {
