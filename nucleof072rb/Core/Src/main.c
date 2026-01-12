@@ -47,7 +47,7 @@
 
 /* USER CODE BEGIN PV */
 const uint16_t maxCounterVal = 2400;
-const uint16_t minOnPeriodCounterVal = 2160; // This is 10% off of 2400, so the on period would be 2160-2400
+const uint16_t maxHighSignalPeriodCounterVal = 2160; // This is 10% off of 2400, so the on (high) period would be 0-2160
 const uint16_t maxADCVal = 1023;
 const uint8_t CH0 = 0;
 
@@ -63,13 +63,13 @@ void SystemClock_Config(void);
 /* USER CODE BEGIN 0 */
 
 uint16_t adcValToCounts(uint16_t resolution){
-	return (resolution / maxADCVal) * (maxCounterVal - minOnPeriodCounterVal) + minOnPeriodCounterVal; // scale value up to a range of 2160-2400 (10% duty cycle)
+	return (resolution / maxADCVal) * (maxCounterVal - maxHighSignalPeriodCounterVal) + maxHighSignalPeriodCounterVal; // scale value up to a range of 2160-2400 (10% duty cycle)
 }
 
 void runMotor(uint16_t resolution) {
 	// convert resolution to # of counts
 	uint16_t counts = adcValToCounts(resolution);
-	// if it reaches the value we have in the resolution -> motor pin gets set to high
+	// if the timer reaches the value we have in the resolution -> motor pin gets set to low
 	__HAL_TIM_SET_COMPARE(&htim1, CH0, counts);
 	// timer resets automatically?
 }
@@ -132,7 +132,7 @@ int main(void)
 	HAL_SPI_TransmitReceive(&hspi1, (uint8_t*)&send_buf, (uint8_t*)&recv_buf, 3, 100);
 	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_8, GPIO_PIN_SET);
 
-	uint16_t resolution = ( ((uint16_t)recv_buf[2] << 8) & (uint16_t)recv_buf[3]) & 0x0003FF; // 10 bit value of ADC,
+	uint16_t resolution = ( ((uint16_t)recv_buf[2] << 8) | (uint16_t)recv_buf[3]) & 0x0003FF; // 10 bit value of ADC,
 
 	runMotor(resolution);
 
