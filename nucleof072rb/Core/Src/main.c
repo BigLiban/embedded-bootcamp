@@ -63,7 +63,7 @@ void SystemClock_Config(void);
 /* USER CODE BEGIN 0 */
 
 uint16_t adcValToCounts(uint16_t resolution){
-	return (resolution / maxADCVal) * (maxDutyCycleValRange - minDutyCycleValRange) + minDutyCycleValRange; // scale value up to a range of 120-240 (5-10% duty cycle)
+	return (resolution / maxADCVal) * (maxDutyCycleValRange - minDutyCycleValRange) + minDutyCycleValRange; // scale value up to a range of 3200-6400 (5-10% duty cycle of a period of 64000)
 }
 
 void runMotor(uint16_t resolution) {
