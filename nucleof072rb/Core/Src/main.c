@@ -46,8 +46,8 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-const uint16_t maxCounterVal = 2400;
-const uint16_t maxHighSignalPeriodCounterVal = 2160; // This is 10% off of 2400 (This makes the off period from 2160-2400 counts)
+const uint16_t maxDutyCycleValRange = 240;
+const uint16_t minDutyCycleValRange = 120;
 const uint16_t maxADCVal = 1023;
 const uint8_t CH0 = 0;
 
@@ -63,7 +63,7 @@ void SystemClock_Config(void);
 /* USER CODE BEGIN 0 */
 
 uint16_t adcValToCounts(uint16_t resolution){
-	return (resolution / maxADCVal) * (maxCounterVal - maxHighSignalPeriodCounterVal) + maxHighSignalPeriodCounterVal; // scale value up to a range of 2160-2400 (10% duty cycle)
+	return (resolution / maxADCVal) * (maxDutyCycleValRange - minDutyCycleValRange) + minDutyCycleValRange; // scale value up to a range of 120-240 (5-10% duty cycle)
 }
 
 void runMotor(uint16_t resolution) {
