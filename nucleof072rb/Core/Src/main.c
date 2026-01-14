@@ -46,8 +46,8 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-const uint16_t maxDutyCycleValRange = 240;
-const uint16_t minDutyCycleValRange = 120;
+const uint16_t maxDutyCycleValRange = 6400;
+const uint16_t minDutyCycleValRange = 3200;
 const uint16_t maxADCVal = 1023;
 const uint8_t CH0 = 0;
 
